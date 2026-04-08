@@ -1,0 +1,48 @@
+name: Fetch ABS Challenge Data
+
+# Runs automatically every day at 8am ET (12:00 UTC)
+# Also runs whenever you push changes to the repo
+# You can also trigger it manually from GitHub's Actions tab
+on:
+  schedule:
+    - cron: "0 12 * * *"   # 8am ET daily
+    - cron: "0 15 * * *"   # 11am ET daily (second run catches morning games)
+    - cron: "0 2 * * *"    # 10pm ET daily (catches evening/West Coast games)
+  push:
+    branches: [main]
+  workflow_dispatch:        # Allows manual trigger from GitHub UI
+
+jobs:
+  fetch-and-commit:
+    runs-on: ubuntu-latest
+
+    # Give the workflow permission to write back to your repo
+    permissions:
+      contents: write
+
+    steps:
+      # Step 1: Check out your repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Step 3: Run the fetch script
+      - name: Fetch ABS data from Baseball Savant
+        run: python scripts/fetch_abs.py
+
+      # Step 4: Commit the updated JSON back to the repo
+      # This makes the data available at:
+      # https://absscoreboard.github.io/abs-data/data/abs-challenges.json
+      - name: Commit updated data
+        run: |
+          git config user.name  "ABS Data Bot"
+          git config user.email "bot@absscoreboard.github.io"
+          git add data/abs-challenges.json
+          # Only commit if there are actual changes
+          git diff --staged --quiet || git commit -m "Auto-update ABS data [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+          git push
