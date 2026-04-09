@@ -1,8 +1,9 @@
 """
-fetch_abs.py v8
+fetch_abs.py v9
 ---------------
 ABS challenge data from MLB Stats API.
-Added verbose logging to diagnose why challenges aren't being found.
+Uses hasReview=True from details (confirmed present in API) to find challenges.
+Also scans description AND event fields for challenge text.
 """
 
 import json
@@ -64,33 +65,23 @@ def get_games(start_date, end_date):
     return games
 
 
-def get_challenges(game, debug=False):
-    """Fetch play-by-play and find all ABS challenges."""
+def get_challenges(game, verbose=False):
+    """
+    Fetch play-by-play and extract ABS challenges.
+    Detection: details.hasReview == True OR description contains 'challenges'
+    """
     url = f"{BASE}/game/{game['game_pk']}/playByPlay"
     try:
         data = fetch(url, timeout=45)
     except Exception as e:
-        print(f"  ERROR game {game['game_pk']} ({game['away']}@{game['home']}): {e}")
+        print(f"  ERROR {game['away']}@{game['home']}: {e}")
         return []
 
-    all_plays = data.get("allPlays", [])
-
-    if debug:
-        # Log structure of first play to understand the data
-        if all_plays:
-            p = all_plays[0]
-            print(f"  DEBUG play keys: {list(p.keys())}")
-            evs = p.get("playEvents", [])
-            if evs:
-                ev = evs[0]
-                print(f"  DEBUG event keys: {list(ev.keys())}")
-                det = ev.get("details", {})
-                print(f"  DEBUG details keys: {list(det.keys())}")
-                print(f"  DEBUG description: {repr(det.get('description',''))}")
-                print(f"  DEBUG event: {repr(det.get('event',''))}")
-
     challenges = []
-    for play in all_plays:
+    has_review_count = 0
+    desc_challenge_count = 0
+
+    for play in data.get("allPlays", []):
         about   = play.get("about", {})
         matchup = play.get("matchup", {})
         inning  = about.get("inning", 0)
@@ -99,35 +90,72 @@ def get_challenges(game, debug=False):
         pitcher = matchup.get("pitcher", {}).get("fullName", "?")
 
         for ev in play.get("playEvents", []):
-            details = ev.get("details", {})
+            details    = ev.get("details", {})
+            has_review = details.get("hasReview", False)
+            description = details.get("description", "")
+            event_type  = details.get("event", "")
 
-            # Try all possible description fields
-            desc = (
-                details.get("description") or
-                details.get("event") or
-                ev.get("description") or
-                ""
-            )
+            # Track both detection methods
+            desc_has_challenge = "challenges" in description.lower()
+            if has_review:
+                has_review_count += 1
+            if desc_has_challenge:
+                desc_challenge_count += 1
 
-            if "challenges" not in desc.lower():
+            # Use EITHER signal to detect a challenge
+            if not has_review and not desc_has_challenge:
                 continue
 
-            count   = ev.get("count", {})
-            balls   = count.get("balls",   0)
-            strikes = count.get("strikes", 0)
+            # For hasReview events without challenge text in description,
+            # check reviewDetails for the full description
+            review = ev.get("reviewDetails", {})
+            challenger_name = review.get("player", {}).get("fullName", "")
+            is_overturned   = review.get("isOverturned", None)
 
-            m          = re.match(r"^(.+?)\s+challenges", desc)
-            challenger = m.group(1).strip() if m else batter
+            # Build the best description we have
+            if desc_has_challenge:
+                desc = description
+            elif challenger_name:
+                # Reconstruct from reviewDetails
+                call_type = "called strike" if details.get("call", {}).get("code") == "C" else "ball"
+                result_txt = "call overturned" if is_overturned else "call confirmed"
+                desc = f"{challenger_name} challenges ({call_type}), {result_txt}."
+            else:
+                desc = description or event_type or "ABS Challenge"
 
             desc_lower = desc.lower()
+
+            # Challenger name
+            m = re.match(r"^(.+?)\s+challenges", desc)
+            if m:
+                challenger = m.group(1).strip()
+            elif challenger_name:
+                challenger = challenger_name
+            else:
+                challenger = batter
+
+            # Role
             if "called strike" in desc_lower:
                 role = "Batter"
             else:
-                pitcher_last = pitcher.split()[-1].lower() if pitcher else ""
-                role = "Pitcher" if (pitcher_last and pitcher_last in desc_lower) else "Catcher"
+                # Check call code from details
+                call_code = details.get("call", {}).get("code", "")
+                if call_code == "C":  # called strike
+                    role = "Batter"
+                else:
+                    pitcher_last = pitcher.split()[-1].lower() if pitcher else ""
+                    if pitcher_last and pitcher_last in desc_lower:
+                        role = "Pitcher"
+                    else:
+                        role = "Catcher"
 
-            result = "Overturned" if "overturned" in desc_lower else "Confirmed"
+            # Result
+            if is_overturned is not None:
+                result = "Overturned" if is_overturned else "Confirmed"
+            else:
+                result = "Overturned" if "overturned" in desc_lower else "Confirmed"
 
+            count   = ev.get("count", {})
             challenges.append({
                 "game_pk":    str(game["game_pk"]),
                 "game_date":  game["game_date"],
@@ -136,8 +164,8 @@ def get_challenges(game, debug=False):
                 "umpire":     game["umpire"],
                 "inning":     inning,
                 "half":       half,
-                "balls":      balls,
-                "strikes":    strikes,
+                "balls":      count.get("balls",   0),
+                "strikes":    count.get("strikes", 0),
                 "batter":     batter,
                 "pitcher":    pitcher,
                 "challenger": challenger,
@@ -146,13 +174,16 @@ def get_challenges(game, debug=False):
                 "desc":       desc,
             })
 
+    if verbose:
+        print(f"  {game['away']}@{game['home']}: hasReview={has_review_count} descMatch={desc_challenge_count} found={len(challenges)}")
+
     return challenges
 
 
 def main():
     today    = today_str()
     end_date = yesterday_str()
-    print(f"=== ABS Data Fetch v8 — {today} ===")
+    print(f"=== ABS Data Fetch v9 — {today} ===")
     print(f"Date range: {SEASON_START} to {end_date}")
 
     try:
@@ -164,22 +195,18 @@ def main():
     print(f"Completed games: {len(games)}")
 
     all_challenges = []
-    errors = 0
-
+    # Log first 5 games verbosely to verify detection
     for i, game in enumerate(games):
-        # Debug the first game in detail
-        debug = (i == 0)
-        chals = get_challenges(game, debug=debug)
+        chals = get_challenges(game, verbose=(i < 5))
         if chals:
             all_challenges.extend(chals)
-            print(f"  {game['away']}@{game['home']} {game['game_date']}: {len(chals)} challenges")
-        elif debug:
-            print(f"  First game ({game['away']}@{game['home']}): 0 challenges")
+            if i >= 5:
+                print(f"  {game['away']}@{game['home']} {game['game_date']}: {len(chals)}")
 
-    total  = len(all_challenges)
-    ov     = sum(1 for c in all_challenges if c["result"] == "Overturned")
-    gc     = len(set(c["game_pk"] for c in all_challenges))
-    pct    = round(100 * ov / total) if total else 0
+    total = len(all_challenges)
+    ov    = sum(1 for c in all_challenges if c["result"] == "Overturned")
+    gc    = len(set(c["game_pk"] for c in all_challenges))
+    pct   = round(100 * ov / total) if total else 0
 
     print(f"\nTotal: {total} challenges | {ov} overturned ({pct}%) | {gc} games")
 
@@ -190,7 +217,7 @@ def main():
     output = {
         "generated_at":     datetime.utcnow().isoformat() + "Z",
         "season":           2026,
-        "source":           "MLB Stats API (description scan)",
+        "source":           "MLB Stats API (hasReview + description scan)",
         "total_challenges": total,
         "total_overturned": ov,
         "overturn_pct":     pct,
@@ -202,7 +229,7 @@ def main():
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
 
-    print(f"✅ Done.")
+    print(f"✅ Written: {total} challenges | {ov} overturned ({pct}%) | {gc} games")
 
 
 if __name__ == "__main__":
