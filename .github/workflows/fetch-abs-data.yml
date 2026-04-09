@@ -5,11 +5,9 @@ on:
     - cron: "0 12 * * *"   # 8am ET daily
     - cron: "0 15 * * *"   # 11am ET daily
     - cron: "0 2 * * *"    # 10pm ET daily
-  push:
-    branches: [main]
-  workflow_dispatch:
+  workflow_dispatch:        # Manual trigger from Actions tab
 
-# Prevent concurrent runs from conflicting on git push
+# Prevent concurrent runs conflicting on git push
 concurrency:
   group: abs-data-fetch
   cancel-in-progress: false
@@ -23,9 +21,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          # Pull latest before we push to avoid conflicts
-          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -39,7 +34,11 @@ jobs:
         run: |
           git config user.name  "ABS Data Bot"
           git config user.email "bot@absscoreboard.github.io"
-          git pull --rebase origin main
           git add data/abs-challenges.json
-          git diff --staged --quiet || git commit -m "Auto-update ABS data [$(date -u '+%Y-%m-%d %H:%M UTC')]"
-          git push
+          # Only commit if there are actual changes to the data file
+          if git diff --staged --quiet; then
+            echo "No data changes — skipping commit"
+          else
+            git commit -m "Auto-update ABS data [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+            git push
+          fi
