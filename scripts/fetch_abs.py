@@ -1,9 +1,8 @@
 """
-fetch_abs.py v7
+fetch_abs.py v8
 ---------------
-Fetches ABS challenge data from MLB Stats API.
-Scans ALL play descriptions for "challenges" to get 100% coverage.
-Fixed: removed restrictive fields= param from schedule call.
+ABS challenge data from MLB Stats API.
+Added verbose logging to diagnose why challenges aren't being found.
 """
 
 import json
@@ -25,15 +24,13 @@ def today_str():
 def yesterday_str():
     return (date.today() - timedelta(days=1)).isoformat()
 
-def fetch(url):
+def fetch(url, timeout=45):
     req = urllib.request.Request(url, headers={"User-Agent": "ABSScoreboard/1.0"})
-    with urllib.request.urlopen(req, timeout=30) as r:
+    with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.loads(r.read().decode("utf-8"))
 
 
 def get_games(start_date, end_date):
-    """Get all completed regular season games with umpire info."""
-    # No fields= filter — let the API return full data so we don't miss nested fields
     url = (
         f"{BASE}/schedule"
         f"?sportId=1&gameType=R"
@@ -49,45 +46,51 @@ def get_games(start_date, end_date):
             code   = status.get("abstractGameCode", "")
             if state not in ("Final", "Game Over") and code != "F":
                 continue
-
-            # Safely extract team abbreviations
             teams   = g.get("teams", {})
             home    = teams.get("home", {}).get("team", {})
             away    = teams.get("away", {}).get("team", {})
-            home_ab = home.get("abbreviation") or home.get("name", "?")[:3].upper()
-            away_ab = away.get("abbreviation") or away.get("name", "?")[:3].upper()
-
-            # Extract home plate umpire
+            home_ab = home.get("abbreviation", home.get("name","?")[:3].upper())
+            away_ab = away.get("abbreviation", away.get("name","?")[:3].upper())
             ump = "Unknown"
             for off in g.get("officials", []):
                 if off.get("officialType") == "Home Plate":
                     ump = off.get("official", {}).get("fullName", "Unknown")
                     break
-
             games.append({
                 "game_pk":   g["gamePk"],
                 "game_date": day["date"],
-                "home":      home_ab,
-                "away":      away_ab,
-                "umpire":    ump,
+                "home": home_ab, "away": away_ab, "umpire": ump,
             })
     return games
 
 
-def get_challenges(game):
-    """
-    Get all ABS challenges for a game by scanning play descriptions.
-    Every ABS challenge has description containing "challenges".
-    """
+def get_challenges(game, debug=False):
+    """Fetch play-by-play and find all ABS challenges."""
     url = f"{BASE}/game/{game['game_pk']}/playByPlay"
     try:
-        data = fetch(url)
+        data = fetch(url, timeout=45)
     except Exception as e:
-        print(f"  ⚠ game {game['game_pk']}: {e}")
+        print(f"  ERROR game {game['game_pk']} ({game['away']}@{game['home']}): {e}")
         return []
 
+    all_plays = data.get("allPlays", [])
+
+    if debug:
+        # Log structure of first play to understand the data
+        if all_plays:
+            p = all_plays[0]
+            print(f"  DEBUG play keys: {list(p.keys())}")
+            evs = p.get("playEvents", [])
+            if evs:
+                ev = evs[0]
+                print(f"  DEBUG event keys: {list(ev.keys())}")
+                det = ev.get("details", {})
+                print(f"  DEBUG details keys: {list(det.keys())}")
+                print(f"  DEBUG description: {repr(det.get('description',''))}")
+                print(f"  DEBUG event: {repr(det.get('event',''))}")
+
     challenges = []
-    for play in data.get("allPlays", []):
+    for play in all_plays:
         about   = play.get("about", {})
         matchup = play.get("matchup", {})
         inning  = about.get("inning", 0)
@@ -96,7 +99,16 @@ def get_challenges(game):
         pitcher = matchup.get("pitcher", {}).get("fullName", "?")
 
         for ev in play.get("playEvents", []):
-            desc = ev.get("details", {}).get("description") or ""
+            details = ev.get("details", {})
+
+            # Try all possible description fields
+            desc = (
+                details.get("description") or
+                details.get("event") or
+                ev.get("description") or
+                ""
+            )
+
             if "challenges" not in desc.lower():
                 continue
 
@@ -104,20 +116,15 @@ def get_challenges(game):
             balls   = count.get("balls",   0)
             strikes = count.get("strikes", 0)
 
-            # Challenger name from description text
             m          = re.match(r"^(.+?)\s+challenges", desc)
             challenger = m.group(1).strip() if m else batter
 
-            # Role
             desc_lower = desc.lower()
             if "called strike" in desc_lower:
                 role = "Batter"
             else:
                 pitcher_last = pitcher.split()[-1].lower() if pitcher else ""
-                if pitcher_last and pitcher_last in desc_lower:
-                    role = "Pitcher"
-                else:
-                    role = "Catcher"
+                role = "Pitcher" if (pitcher_last and pitcher_last in desc_lower) else "Catcher"
 
             result = "Overturned" if "overturned" in desc_lower else "Confirmed"
 
@@ -145,32 +152,36 @@ def get_challenges(game):
 def main():
     today    = today_str()
     end_date = yesterday_str()
-    print(f"=== ABS Data Fetch v7 — {today} ===")
+    print(f"=== ABS Data Fetch v8 — {today} ===")
     print(f"Date range: {SEASON_START} to {end_date}")
 
     try:
         games = get_games(SEASON_START, end_date)
     except Exception as e:
-        print(f"FATAL: Schedule fetch failed: {e}")
-        if os.path.exists(OUTPUT_FILE):
-            print("Keeping existing data.")
+        print(f"FATAL: Schedule failed: {e}")
         sys.exit(0)
 
     print(f"Completed games: {len(games)}")
 
     all_challenges = []
-    for game in games:
-        chals = get_challenges(game)
+    errors = 0
+
+    for i, game in enumerate(games):
+        # Debug the first game in detail
+        debug = (i == 0)
+        chals = get_challenges(game, debug=debug)
         if chals:
             all_challenges.extend(chals)
             print(f"  {game['away']}@{game['home']} {game['game_date']}: {len(chals)} challenges")
+        elif debug:
+            print(f"  First game ({game['away']}@{game['home']}): 0 challenges")
 
-    total    = len(all_challenges)
-    ov       = sum(1 for c in all_challenges if c["result"] == "Overturned")
-    gcount   = len(set(c["game_pk"] for c in all_challenges))
-    pct      = round(100 * ov / total) if total else 0
+    total  = len(all_challenges)
+    ov     = sum(1 for c in all_challenges if c["result"] == "Overturned")
+    gc     = len(set(c["game_pk"] for c in all_challenges))
+    pct    = round(100 * ov / total) if total else 0
 
-    print(f"\nTotal: {total} challenges | {ov} overturned ({pct}%) | {gcount} games")
+    print(f"\nTotal: {total} challenges | {ov} overturned ({pct}%) | {gc} games")
 
     if total == 0:
         print("ERROR: No challenges found. Keeping existing data.")
@@ -183,7 +194,7 @@ def main():
         "total_challenges": total,
         "total_overturned": ov,
         "overturn_pct":     pct,
-        "total_games":      gcount,
+        "total_games":      gc,
         "challenges":       all_challenges,
     }
 
