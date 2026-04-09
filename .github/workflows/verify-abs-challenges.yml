@@ -1,0 +1,21 @@
+name: Verify ABS Challenge Data
+
+# Run manually only — this is a spot-check tool, not a daily job
+on:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run verification against 50 games
+        run: python scripts/verify_challenges.py
