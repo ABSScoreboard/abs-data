@@ -2,7 +2,7 @@
 fetch_abs.py
 ------------
 Fetches ABS challenge data from Baseball Savant Statcast Search.
-Filters to only ABS-reviewed pitches using has_review=1.
+Uses has_review=1 to filter to only ABS-challenged pitches.
 Runs daily via GitHub Actions → saves to data/abs-challenges.json
 """
 
@@ -19,32 +19,30 @@ import re
 SEASON_START = "2026-03-26"
 OUTPUT_FILE  = "data/abs-challenges.json"
 
+
 def today_str():
     return date.today().isoformat()
 
+
 def fetch_savant(start_date, end_date):
-    """
-    Fetch ONLY ABS-challenged pitches from Statcast Search.
-    Key filter: has_review=1 (only pitches with an ABS challenge)
-    """
-    # Build URL - has_review=1 is the critical filter
+    """Fetch only ABS-challenged pitches from Statcast Search (has_review=1)."""
     params = "&".join([
         "all=true",
-        "hfGT=R%7C",              # Regular season only
-        "hfSea=2026%7C",          # 2026 season
+        "hfGT=R%7C",
+        "hfSea=2026%7C",
         "player_type=batter",
         f"game_date_gt={start_date}",
         f"game_date_lt={end_date}",
-        "has_review=1",            # ← KEY: only ABS-reviewed pitches
+        "has_review=1",
         "min_pitches=0",
         "min_results=0",
         "sort_col=game_date",
         "sort_order=desc",
-        "type=details",            # pitch-level detail
+        "type=details",
     ])
     url = f"https://baseballsavant.mlb.com/statcast_search/csv?{params}"
-
     print(f"Fetching: {url[:120]}...")
+
     req = urllib.request.Request(url, headers={
         "User-Agent": (
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
@@ -71,76 +69,47 @@ def fetch_savant(start_date, end_date):
 
     # Strip BOM if present
     raw = raw.lstrip("\ufeff")
-
     lines = [l for l in raw.strip().split("\n") if l.strip()]
     print(f"  Response: {len(lines)} lines")
     if lines:
-        print(f"  First line: {repr(lines[0][:120])}")
+        print(f"  First line preview: {repr(lines[0][:100])}")
 
     if len(lines) < 2:
         print(f"  Full response: {repr(raw[:500])}")
-        raise RuntimeError(f"Too few lines ({len(lines)}) — filter may not be working")
+        raise RuntimeError(f"Too few lines ({len(lines)})")
 
     reader = csv.DictReader(io.StringIO(raw))
     rows = list(reader)
-
-    # Verify these look like ABS challenge pitches
-    # has_review should be in the data or des should mention "challenges"
-    abs_rows = []
-    for row in rows:
-        des = (row.get("des") or row.get("description") or "").lower()
-        has_review = row.get("has_review", "")
-        # Keep row if it has a review flag or description mentions challenge
-        if has_review in ("1", "True", "true") or "challenges" in des or "challenge" in des:
-            abs_rows.append(row)
-
-    print(f"  Total rows: {len(rows)}, ABS challenge rows: {len(abs_rows)}")
-
-    if len(abs_rows) == 0 and len(rows) > 0:
-        # No has_review filter worked — maybe all rows are ABS (small dataset)
-        # Check if the numbers make sense (should be ~300-400, not 25000)
-        if len(rows) <= 1000:
-            print(f"  All {len(rows)} rows appear to be ABS challenges")
-            return rows
-        else:
-            print(f"  WARNING: {len(rows)} rows but none confirmed ABS. Checking columns...")
-            if rows:
-                print(f"  Columns: {list(rows[0].keys())}")
-            raise RuntimeError(f"Got {len(rows)} rows but none confirmed as ABS challenges")
-
-    return abs_rows if abs_rows else rows
+    print(f"  Parsed {len(rows)} rows")
+    if rows:
+        print(f"  Columns: {list(rows[0].keys())[:8]}")
+    return rows
 
 
 def parse_row(row):
     """Convert a Statcast CSV row to our challenge format."""
     des = row.get("des") or row.get("description") or ""
-
-    # Extract challenger name from description
-    # Pattern: "Ryan Jeffers challenges (called strike), call overturned."
-    challenger = "?"
-    m = re.match(r"^([A-Z][a-záéíóúñü'\-. ]+?)\s+challenges", des)
-    if m:
-        challenger = m.group(1).strip()
-    else:
-        challenger = row.get("player_name") or "?"
-
-    # Role: S (strike) = batter challenged, B (ball) = fielder challenged
-    pitch_code = (row.get("type") or "").strip()
     des_lower = des.lower()
-    if pitch_code == "S" or "called strike" in des_lower:
+
+    # Extract challenger name — pattern: "Name challenges (...)"
+    # Use greedy-safe pattern that works across Python versions
+    m = re.match(r"^(.+?)\s+challenges", des)
+    challenger = m.group(1).strip() if m else (row.get("player_name") or "?")
+
+    # Role: called strike = batter challenged, ball = fielder challenged
+    if "called strike" in des_lower:
         role = "Batter"
     else:
+        # Check if pitcher is challenger via last name match
         pitcher = row.get("pitcher") or ""
-        if pitcher and pitcher.split()[-1].lower() in des_lower:
+        pitcher_last = pitcher.split()[-1].lower() if pitcher else ""
+        if pitcher_last and pitcher_last in des_lower:
             role = "Pitcher"
         else:
             role = "Catcher"
 
     # Result
-    if "overturned" in des_lower:
-        result = "Overturned"
-    else:
-        result = "Confirmed"
+    result = "Overturned" if "overturned" in des_lower else "Confirmed"
 
     try:
         inning = int(row.get("inning") or 0)
@@ -198,7 +167,7 @@ def main():
     print(f"Parsed {len(challenges)} challenges ({errors} errors)")
 
     if len(challenges) == 0:
-        print("ERROR: Zero challenges parsed. Keeping existing data.")
+        print("ERROR: Zero challenges. Keeping existing data.")
         sys.exit(0)
 
     overturned = sum(1 for c in challenges if c["result"] == "Overturned")
