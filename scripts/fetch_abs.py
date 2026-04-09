@@ -31,6 +31,41 @@ def fetch(url, timeout=45):
         return json.loads(r.read().decode("utf-8"))
 
 
+
+# MLB team name → standard abbreviation lookup
+# Needed because the API sometimes returns full names instead of abbreviations
+TEAM_ABBREV = {
+    "Arizona Diamondbacks": "ARI", "Atlanta Braves": "ATL",
+    "Baltimore Orioles": "BAL", "Boston Red Sox": "BOS",
+    "Chicago Cubs": "CHC", "Chicago White Sox": "CWS",
+    "Cincinnati Reds": "CIN", "Cleveland Guardians": "CLE",
+    "Colorado Rockies": "COL", "Detroit Tigers": "DET",
+    "Houston Astros": "HOU", "Kansas City Royals": "KC",
+    "Los Angeles Angels": "LAA", "Los Angeles Dodgers": "LAD",
+    "Miami Marlins": "MIA", "Milwaukee Brewers": "MIL",
+    "Minnesota Twins": "MIN", "New York Mets": "NYM",
+    "New York Yankees": "NYY", "Oakland Athletics": "OAK",
+    "Athletics": "ATH", "Philadelphia Phillies": "PHI",
+    "Pittsburgh Pirates": "PIT", "San Diego Padres": "SD",
+    "San Francisco Giants": "SF", "Seattle Mariners": "SEA",
+    "St. Louis Cardinals": "STL", "Tampa Bay Rays": "TB",
+    "Texas Rangers": "TEX", "Toronto Blue Jays": "TOR",
+    "Washington Nationals": "WSH",
+}
+
+def team_abbrev(team_dict):
+    """Get standard team abbreviation, falling back gracefully."""
+    # Try direct abbreviation field first
+    ab = team_dict.get("abbreviation", "")
+    if ab and len(ab) <= 4:
+        return ab
+    # Try name lookup
+    name = team_dict.get("name", "")
+    if name in TEAM_ABBREV:
+        return TEAM_ABBREV[name]
+    # Last resort: first 3 chars of name
+    return name[:3].upper() if name else "?"
+
 def get_games(start_date, end_date):
     url = (
         f"{BASE}/schedule"
@@ -50,8 +85,8 @@ def get_games(start_date, end_date):
             teams   = g.get("teams", {})
             home    = teams.get("home", {}).get("team", {})
             away    = teams.get("away", {}).get("team", {})
-            home_ab = home.get("abbreviation", home.get("name","?")[:3].upper())
-            away_ab = away.get("abbreviation", away.get("name","?")[:3].upper())
+            home_ab = team_abbrev(home)
+            away_ab = team_abbrev(away)
             ump = "Unknown"
             for off in g.get("officials", []):
                 if off.get("officialType") == "Home Plate":
