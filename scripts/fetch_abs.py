@@ -2,8 +2,9 @@
 fetch_abs.py
 ------------
 Fetches ABS challenge data from Baseball Savant Statcast Search.
-Uses has_review=1 to filter to only ABS-challenged pitches.
-Runs daily via GitHub Actions → saves to data/abs-challenges.json
+Since has_review=1 isn't filtering server-side, we download all pitches
+and filter locally to rows where 'des' contains "challenges" — these are
+the ABS challenge events.
 """
 
 import csv
@@ -25,15 +26,18 @@ def today_str():
 
 
 def fetch_savant(start_date, end_date):
-    """Fetch only ABS-challenged pitches from Statcast Search (has_review=1)."""
+    """
+    Fetch pitches from Statcast Search and filter to ABS challenges locally.
+    ABS challenge rows always have 'des' containing the word 'challenges'.
+    e.g. "Ryan Jeffers challenges (called strike), call overturned to ball."
+    """
     params = "&".join([
         "all=true",
-        "hfGT=R%7C",
-        "hfSea=2026%7C",
+        "hfGT=R%7C",              # Regular season
+        "hfSea=2026%7C",          # 2026 season
         "player_type=batter",
         f"game_date_gt={start_date}",
         f"game_date_lt={end_date}",
-        "has_review=1",
         "min_pitches=0",
         "min_results=0",
         "sort_col=game_date",
@@ -41,7 +45,7 @@ def fetch_savant(start_date, end_date):
         "type=details",
     ])
     url = f"https://baseballsavant.mlb.com/statcast_search/csv?{params}"
-    print(f"Fetching: {url[:120]}...")
+    print(f"Fetching Savant CSV (full pitch data, will filter locally)...")
 
     req = urllib.request.Request(url, headers={
         "User-Agent": (
@@ -54,7 +58,7 @@ def fetch_savant(start_date, end_date):
     })
 
     try:
-        with urllib.request.urlopen(req, timeout=90) as resp:
+        with urllib.request.urlopen(req, timeout=120) as resp:
             raw_bytes = resp.read()
             content_encoding = resp.headers.get("Content-Encoding", "")
             if "gzip" in content_encoding:
@@ -67,46 +71,50 @@ def fetch_savant(start_date, end_date):
     except urllib.error.URLError as e:
         raise RuntimeError(f"URL error: {e.reason}")
 
-    # Strip BOM if present
     raw = raw.lstrip("\ufeff")
     lines = [l for l in raw.strip().split("\n") if l.strip()]
-    print(f"  Response: {len(lines)} lines")
-    if lines:
-        print(f"  First line preview: {repr(lines[0][:100])}")
+    print(f"  Total lines from Savant: {len(lines)}")
 
     if len(lines) < 2:
-        print(f"  Full response: {repr(raw[:500])}")
         raise RuntimeError(f"Too few lines ({len(lines)})")
 
     reader = csv.DictReader(io.StringIO(raw))
-    rows = list(reader)
-    print(f"  Parsed {len(rows)} rows")
-    if rows:
-        print(f"  Columns: {list(rows[0].keys())[:8]}")
-    return rows
+    all_rows = list(reader)
+    print(f"  Total pitches: {len(all_rows)}")
+
+    # Filter to ABS challenge rows only
+    # ABS challenge rows have 'des' containing "challenges"
+    abs_rows = [
+        r for r in all_rows
+        if "challenges" in (r.get("des") or "").lower()
+    ]
+    print(f"  ABS challenge rows: {len(abs_rows)}")
+
+    if len(abs_rows) == 0:
+        # Log sample of 'des' values to help debug
+        sample_des = [r.get("des", "") for r in all_rows[:10]]
+        print(f"  Sample 'des' values: {sample_des}")
+        raise RuntimeError("No ABS challenge rows found after filtering")
+
+    return abs_rows
 
 
 def parse_row(row):
-    """Convert a Statcast CSV row to our challenge format."""
-    des = row.get("des") or row.get("description") or ""
+    """Convert a Statcast row to our challenge format."""
+    des = row.get("des") or ""
     des_lower = des.lower()
 
-    # Extract challenger name — pattern: "Name challenges (...)"
-    # Use greedy-safe pattern that works across Python versions
+    # Challenger: "Name challenges (...)"
     m = re.match(r"^(.+?)\s+challenges", des)
     challenger = m.group(1).strip() if m else (row.get("player_name") or "?")
 
-    # Role: called strike = batter challenged, ball = fielder challenged
+    # Role
     if "called strike" in des_lower:
         role = "Batter"
     else:
-        # Check if pitcher is challenger via last name match
         pitcher = row.get("pitcher") or ""
         pitcher_last = pitcher.split()[-1].lower() if pitcher else ""
-        if pitcher_last and pitcher_last in des_lower:
-            role = "Pitcher"
-        else:
-            role = "Catcher"
+        role = "Pitcher" if (pitcher_last and pitcher_last in des_lower) else "Catcher"
 
     # Result
     result = "Overturned" if "overturned" in des_lower else "Confirmed"
