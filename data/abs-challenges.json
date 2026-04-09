@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-04-09T01:01:28.151255Z",
+  "generated_at": "2026-04-09T01:13:15.460788Z",
   "season": 2026,
   "source": "MLB Stats API (hasReview + description scan)",
-  "total_challenges": 537,
-  "total_overturned": 307,
+  "total_challenges": 540,
+  "total_overturned": 309,
   "overturn_pct": 57,
-  "total_games": 167,
+  "total_games": 168,
   "challenges": [
     {
       "game_pk": "823649",
@@ -9135,6 +9135,57 @@
       "role": "Catcher",
       "result": "Overturned",
       "desc": "Marcus Semien challenges (ball), call overturned."
+    },
+    {
+      "game_pk": "823000",
+      "game_date": "2026-04-08",
+      "home": "TAM",
+      "away": "CHI",
+      "umpire": "Chad Whitson",
+      "inning": 4,
+      "half": "bottom",
+      "balls": 2,
+      "strikes": 1,
+      "batter": "Ben Williamson",
+      "pitcher": "Colin Rea",
+      "challenger": "Ben Williamson",
+      "role": "Catcher",
+      "result": "Overturned",
+      "desc": "Ben Williamson challenges (ball), call overturned."
+    },
+    {
+      "game_pk": "823000",
+      "game_date": "2026-04-08",
+      "home": "TAM",
+      "away": "CHI",
+      "umpire": "Chad Whitson",
+      "inning": 5,
+      "half": "top",
+      "balls": 2,
+      "strikes": 2,
+      "batter": "Carson Kelly",
+      "pitcher": "Joe Boyle",
+      "challenger": "Carson Kelly",
+      "role": "Catcher",
+      "result": "Overturned",
+      "desc": "Foul"
+    },
+    {
+      "game_pk": "823000",
+      "game_date": "2026-04-08",
+      "home": "TAM",
+      "away": "CHI",
+      "umpire": "Chad Whitson",
+      "inning": 9,
+      "half": "bottom",
+      "balls": 1,
+      "strikes": 2,
+      "batter": "Ben Williamson",
+      "pitcher": "Hunter Harvey",
+      "challenger": "Ben Williamson",
+      "role": "Catcher",
+      "result": "Confirmed",
+      "desc": "Rays challenged (tag play), call on the field was upheld: Chandler Simpson caught stealing 3rd base, catcher Carson Kelly to third baseman Alex Bregman."
     }
   ]
 }
