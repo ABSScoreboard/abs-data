@@ -1,10 +1,9 @@
 """
-fetch_abs.py
-------------
+fetch_abs.py v5
+---------------
 Fetches ABS challenge data from Baseball Savant Statcast Search.
-Since has_review=1 isn't filtering server-side, we download all pitches
-and filter locally to rows where 'des' contains "challenges" — these are
-the ABS challenge events.
+Filters locally to ABS challenge rows using the 'des' field.
+Handles Statcast name format ("Last, First" → "First Last").
 """
 
 import csv
@@ -25,16 +24,31 @@ def today_str():
     return date.today().isoformat()
 
 
+def fix_name(name):
+    """
+    Statcast returns names as "Last, First" — convert to "First Last".
+    Also handles "Last, First M." middle initials.
+    """
+    if not name:
+        return "?"
+    name = name.strip()
+    if "," in name:
+        parts = name.split(",", 1)
+        last  = parts[0].strip()
+        first = parts[1].strip()
+        return f"{first} {last}"
+    return name
+
+
 def fetch_savant(start_date, end_date):
     """
-    Fetch pitches from Statcast Search and filter to ABS challenges locally.
-    ABS challenge rows always have 'des' containing the word 'challenges'.
-    e.g. "Ryan Jeffers challenges (called strike), call overturned to ball."
+    Download Statcast pitch data and filter to ABS challenge rows.
+    ABS challenge rows have 'des' containing 'challenges'.
     """
     params = "&".join([
         "all=true",
-        "hfGT=R%7C",              # Regular season
-        "hfSea=2026%7C",          # 2026 season
+        "hfGT=R%7C",
+        "hfSea=2026%7C",
         "player_type=batter",
         f"game_date_gt={start_date}",
         f"game_date_lt={end_date}",
@@ -45,7 +59,7 @@ def fetch_savant(start_date, end_date):
         "type=details",
     ])
     url = f"https://baseballsavant.mlb.com/statcast_search/csv?{params}"
-    print(f"Fetching Savant CSV (full pitch data, will filter locally)...")
+    print(f"Fetching Savant data ({start_date} to {end_date})...")
 
     req = urllib.request.Request(url, headers={
         "User-Agent": (
@@ -72,49 +86,75 @@ def fetch_savant(start_date, end_date):
         raise RuntimeError(f"URL error: {e.reason}")
 
     raw = raw.lstrip("\ufeff")
-    lines = [l for l in raw.strip().split("\n") if l.strip()]
-    print(f"  Total lines from Savant: {len(lines)}")
-
-    if len(lines) < 2:
-        raise RuntimeError(f"Too few lines ({len(lines)})")
-
     reader = csv.DictReader(io.StringIO(raw))
     all_rows = list(reader)
-    print(f"  Total pitches: {len(all_rows)}")
+    print(f"  Total pitches downloaded: {len(all_rows)}")
 
-    # Filter to ABS challenge rows only
-    # ABS challenge rows have 'des' containing "challenges"
-    abs_rows = [
-        r for r in all_rows
-        if "challenges" in (r.get("des") or "").lower()
-    ]
-    print(f"  ABS challenge rows: {len(abs_rows)}")
+    if len(all_rows) == 0:
+        raise RuntimeError("No rows returned from Savant")
 
+    # Log available columns once for debugging
+    if all_rows:
+        cols = list(all_rows[0].keys())
+        print(f"  Columns: {cols[:15]}")
+
+    # Filter to ABS challenge rows
+    # The 'des' field contains the play description
+    # ABS challenges always read: "Name challenges (called strike/ball), call overturned/confirmed."
+    abs_rows = [r for r in all_rows if "challenges" in (r.get("des") or "").lower()]
+    print(f"  ABS challenge rows (des contains 'challenges'): {len(abs_rows)}")
+
+    # If 'des' filter found nothing, try 'description' field
     if len(abs_rows) == 0:
-        # Log sample of 'des' values to help debug
-        sample_des = [r.get("des", "") for r in all_rows[:10]]
-        print(f"  Sample 'des' values: {sample_des}")
-        raise RuntimeError("No ABS challenge rows found after filtering")
+        abs_rows = [r for r in all_rows if "challenges" in (r.get("description") or "").lower()]
+        print(f"  ABS challenge rows (description contains 'challenges'): {len(abs_rows)}")
+
+    # If still nothing, log sample des values to debug
+    if len(abs_rows) == 0:
+        print("  Sample 'des' values (first 5 rows):")
+        for r in all_rows[:5]:
+            print(f"    des={repr(r.get('des','')[:80])}")
+        print("  Sample 'description' values (first 5 rows):")
+        for r in all_rows[:5]:
+            print(f"    description={repr(r.get('description','')[:80])}")
+        # Log all unique field names containing 'review' or 'abs'
+        review_fields = [k for k in all_rows[0].keys()
+                        if "review" in k.lower() or "abs" in k.lower() or "challenge" in k.lower()]
+        print(f"  Review/ABS-related columns: {review_fields}")
+        raise RuntimeError("Could not find ABS challenge rows — check column names in logs")
 
     return abs_rows
 
 
 def parse_row(row):
-    """Convert a Statcast row to our challenge format."""
-    des = row.get("des") or ""
+    """Convert a Statcast CSV row to our challenge format."""
+    des      = row.get("des") or row.get("description") or ""
     des_lower = des.lower()
 
-    # Challenger: "Name challenges (...)"
-    m = re.match(r"^(.+?)\s+challenges", des)
-    challenger = m.group(1).strip() if m else (row.get("player_name") or "?")
+    # Fix name format: Statcast uses "Last, First" — convert to "First Last"
+    batter_raw  = row.get("player_name") or row.get("batter") or "?"
+    batter      = fix_name(batter_raw)
 
-    # Role
+    # Pitcher: Statcast sometimes stores as ID or "Last, First"
+    pitcher_raw = row.get("pitcher_name") or row.get("matchup_pitcher_name") or ""
+    if not pitcher_raw or pitcher_raw.isdigit():
+        pitcher_raw = ""
+    pitcher = fix_name(pitcher_raw) if pitcher_raw else "?"
+
+    # Challenger: extract from description
+    # Pattern: "First Last challenges (...)"
+    m = re.match(r"^(.+?)\s+challenges", des)
+    challenger = m.group(1).strip() if m else batter
+
+    # Role: called strike = batter challenged; ball = fielder challenged
     if "called strike" in des_lower:
         role = "Batter"
     else:
-        pitcher = row.get("pitcher") or ""
-        pitcher_last = pitcher.split()[-1].lower() if pitcher else ""
-        role = "Pitcher" if (pitcher_last and pitcher_last in des_lower) else "Catcher"
+        # Check if challenger name matches pitcher
+        if pitcher and pitcher != "?" and pitcher.lower() in des_lower:
+            role = "Pitcher"
+        else:
+            role = "Catcher"
 
     # Result
     result = "Overturned" if "overturned" in des_lower else "Confirmed"
@@ -141,8 +181,8 @@ def parse_row(row):
         "half":       half,
         "balls":      balls,
         "strikes":    strikes,
-        "batter":     row.get("player_name") or "?",
-        "pitcher":    row.get("pitcher") or "?",
+        "batter":     batter,
+        "pitcher":    pitcher,
         "challenger": challenger,
         "role":       role,
         "result":     result,
@@ -152,7 +192,7 @@ def parse_row(row):
 
 def main():
     today = today_str()
-    print(f"=== ABS Data Fetch — {today} ===")
+    print(f"=== ABS Data Fetch v5 — {today} ===")
 
     try:
         rows = fetch_savant(SEASON_START, today)
@@ -175,12 +215,24 @@ def main():
     print(f"Parsed {len(challenges)} challenges ({errors} errors)")
 
     if len(challenges) == 0:
-        print("ERROR: Zero challenges. Keeping existing data.")
+        print("ERROR: Zero challenges parsed. Keeping existing data.")
         sys.exit(0)
 
+    # Quick sanity check
     overturned = sum(1 for c in challenges if c["result"] == "Overturned")
     games      = len(set(c["game_pk"] for c in challenges))
     pct        = round(100 * overturned / len(challenges)) if challenges else 0
+
+    print(f"Sanity check: {len(challenges)} challenges, {overturned} overturned ({pct}%), {games} games")
+    if len(challenges) > 5000:
+        print(f"WARNING: {len(challenges)} challenges seems too high — filter may not be working")
+    if pct < 30 or pct > 80:
+        print(f"WARNING: {pct}% overturn rate seems unusual (expected 50-65%)")
+
+    # Sample first 3 challenges for verification
+    print("Sample challenges:")
+    for c in challenges[:3]:
+        print(f"  {c['away']}@{c['home']} {c['game_date']} | {c['challenger']} ({c['role']}) | {c['result']}")
 
     output = {
         "generated_at":     datetime.utcnow().isoformat() + "Z",
@@ -197,7 +249,7 @@ def main():
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
 
-    print(f"✅ {len(challenges)} challenges | {overturned} overturned ({pct}%) | {games} games")
+    print(f"✅ Written: {len(challenges)} challenges | {overturned} overturned ({pct}%) | {games} games")
 
 
 if __name__ == "__main__":
