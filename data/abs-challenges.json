@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-04-21T07:18:02.396574Z",
+  "generated_at": "2026-04-21T16:21:30.594943Z",
   "season": 2026,
   "source": "MLB Stats API (hasReview + description scan)",
-  "total_challenges": 1055,
-  "total_overturned": 590,
+  "total_challenges": 1054,
+  "total_overturned": 589,
   "overturn_pct": 56,
   "total_games": 320,
   "challenges": [
@@ -7469,23 +7469,6 @@
       "role": "Catcher",
       "result": "Overturned",
       "desc": "Derek Hill challenges (ball), call overturned."
-    },
-    {
-      "game_pk": "824619",
-      "game_date": "2026-04-06",
-      "home": "CWS",
-      "away": "BAL",
-      "umpire": "Malachi Moore",
-      "inning": 7,
-      "half": "bottom",
-      "balls": 3,
-      "strikes": 3,
-      "batter": "Andrew Benintendi",
-      "pitcher": "Tyler Wells",
-      "challenger": "Andrew Benintendi",
-      "role": "Catcher",
-      "result": "Overturned",
-      "desc": "Swinging Strike"
     },
     {
       "game_pk": "824619",
