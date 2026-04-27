@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-27T10:27:22.596636Z",
+  "generated_at": "2026-04-27T17:11:33.096058Z",
   "season": 2026,
   "source": "MLB Stats API (hasReview + description scan)",
   "total_challenges": 1353,
@@ -17036,10 +17036,10 @@
       "strikes": 2,
       "batter": "Max Muncy",
       "pitcher": "Michael Lorenzen",
-      "challenger": "Hunter Goodman",
+      "challenger": "Michael Lorenzen",
       "role": "Batter",
       "result": "Overturned",
-      "desc": "Hunter Goodman challenges (called strike), call overturned."
+      "desc": "Michael Lorenzen challenges (called strike), call overturned."
     },
     {
       "game_pk": "824371",
@@ -19280,10 +19280,10 @@
       "strikes": 1,
       "batter": "Andruw Monasterio",
       "pitcher": "Max Fried",
-      "challenger": "Max Fried",
+      "challenger": "Austin Wells",
       "role": "Batter",
       "result": "Overturned",
-      "desc": "Max Fried challenges (called strike), call overturned."
+      "desc": "Austin Wells challenges (called strike), call overturned."
     },
     {
       "game_pk": "824774",
