@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-06T14:25:33.358944Z",
+  "generated_at": "2026-05-06T16:23:50.884496Z",
   "season": 2026,
   "source": "MLB Stats API (hasReview + description scan)",
   "total_challenges": 1740,
@@ -1157,7 +1157,7 @@
       "balls": 1,
       "strikes": 1,
       "batter": "Cam Smith",
-      "pitcher": "Walbert Urena",
+      "pitcher": "Walbert Ureña",
       "challenger": "Cam Smith",
       "role": "Batter",
       "result": "Confirmed",
