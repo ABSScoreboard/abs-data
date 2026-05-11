@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-11T05:53:22.851560Z",
+  "generated_at": "2026-05-11T15:22:44.548411Z",
   "season": 2026,
   "source": "MLB Stats API (hasReview + description scan)",
   "total_challenges": 1957,
@@ -26265,7 +26265,7 @@
       "half": "top",
       "balls": 0,
       "strikes": 1,
-      "batter": "Yohendrick Pinango",
+      "batter": "Yohendrick Piñango",
       "pitcher": "Simeon Woods Richardson",
       "challenger": "Victor Caratini",
       "role": "Batter",
