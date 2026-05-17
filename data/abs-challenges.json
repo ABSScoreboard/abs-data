@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-05-17T13:42:58.571355Z",
+  "generated_at": "2026-05-17T15:50:33.074728Z",
   "season": 2026,
   "source": "MLB Stats API (hasReview + description scan)",
   "total_challenges": 2212,
-  "total_overturned": 1224,
+  "total_overturned": 1225,
   "overturn_pct": 55,
   "total_games": 653,
   "challenges": [
@@ -37183,8 +37183,8 @@
       "pitcher": "Lake Bachar",
       "challenger": "Joe Mack",
       "role": "Batter",
-      "result": "Confirmed",
-      "desc": "Joe Mack challenges (called strike), call confirmed."
+      "result": "Overturned",
+      "desc": "Joe Mack challenges (called strike), call overturned."
     },
     {
       "game_pk": "824435",
