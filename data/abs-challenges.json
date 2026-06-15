@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-15T07:14:53.990151Z",
+  "generated_at": "2026-06-15T17:24:32.153875Z",
   "season": 2026,
   "source": "MLB Stats API (hasReview + description scan)",
   "total_challenges": 3503,
@@ -57156,10 +57156,10 @@
       "strikes": 1,
       "batter": "Sal Stewart",
       "pitcher": "Eduardo Rodriguez",
-      "challenger": "Eduardo Rodriguez",
+      "challenger": "Gabriel Moreno",
       "role": "Batter",
       "result": "Overturned",
-      "desc": "Eduardo Rodriguez challenges (called strike), call overturned."
+      "desc": "Gabriel Moreno challenges (called strike), call overturned."
     },
     {
       "game_pk": "824507",
