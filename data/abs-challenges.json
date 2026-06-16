@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-06-16T17:09:19.286352Z",
+  "generated_at": "2026-06-16T18:55:33.321604Z",
   "season": 2026,
   "source": "MLB Stats API (hasReview + description scan)",
-  "total_challenges": 3531,
-  "total_overturned": 1945,
+  "total_challenges": 3533,
+  "total_overturned": 1947,
   "overturn_pct": 55,
-  "total_games": 1036,
+  "total_games": 1037,
   "challenges": [
     {
       "game_pk": "823649",
@@ -584,6 +584,40 @@
       "role": "Batter",
       "result": "Overturned",
       "desc": "Logan O'Hoppe challenges (called strike), call overturned."
+    },
+    {
+      "game_pk": "823324",
+      "game_date": "2026-03-27",
+      "home": "SD",
+      "away": "DET",
+      "umpire": "Lance Barrett",
+      "inning": 3,
+      "half": "top",
+      "balls": 1,
+      "strikes": 2,
+      "batter": "Gleyber Torres",
+      "pitcher": "Michael King",
+      "challenger": "Luis Campusano",
+      "role": "Batter",
+      "result": "Overturned",
+      "desc": "Luis Campusano challenges (called strike), call overturned."
+    },
+    {
+      "game_pk": "823324",
+      "game_date": "2026-03-27",
+      "home": "SD",
+      "away": "DET",
+      "umpire": "Lance Barrett",
+      "inning": 4,
+      "half": "top",
+      "balls": 3,
+      "strikes": 2,
+      "batter": "Spencer Torkelson",
+      "pitcher": "Michael King",
+      "challenger": "Luis Campusano",
+      "role": "Batter",
+      "result": "Overturned",
+      "desc": "Luis Campusano challenges (called strike), call overturned."
     },
     {
       "game_pk": "823162",
