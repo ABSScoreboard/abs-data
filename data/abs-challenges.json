@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-08T14:31:36.641093Z",
+  "generated_at": "2026-07-08T16:26:23.126363Z",
   "season": 2026,
   "source": "MLB Stats API (hasReview + description scan)",
   "total_challenges": 4522,
@@ -28595,7 +28595,7 @@
       "balls": 3,
       "strikes": 1,
       "batter": "Trent Grisham",
-      "pitcher": "Lou Trivino III",
+      "pitcher": "Lou Trivino",
       "challenger": "Trent Grisham",
       "role": "Catcher",
       "result": "Overturned",
@@ -76655,10 +76655,10 @@
       "strikes": 0,
       "batter": "Anthony Seigler",
       "pitcher": "Brandon Eisert",
-      "challenger": "Brandon Eisert",
-      "role": "Pitcher",
+      "challenger": "Kyle Teel",
+      "role": "Catcher",
       "result": "Confirmed",
-      "desc": "Brandon Eisert challenges (ball), call confirmed."
+      "desc": "Kyle Teel challenges (ball), call confirmed."
     },
     {
       "game_pk": "824579",
