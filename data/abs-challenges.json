@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-09T15:20:51.320508Z",
+  "generated_at": "2026-07-09T17:18:26.020199Z",
   "season": 2026,
   "source": "MLB Stats API (hasReview + description scan)",
   "total_challenges": 4574,
@@ -28595,7 +28595,7 @@
       "balls": 3,
       "strikes": 1,
       "batter": "Trent Grisham",
-      "pitcher": "Lou Trivino",
+      "pitcher": "Lou Trivino III",
       "challenger": "Trent Grisham",
       "role": "Catcher",
       "result": "Overturned",
