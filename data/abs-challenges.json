@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-07-16T16:15:33.651203Z",
+  "generated_at": "2026-07-17T05:01:13.035474Z",
   "season": 2026,
   "source": "MLB Stats API (hasReview + description scan)",
-  "total_challenges": 4773,
-  "total_overturned": 2629,
+  "total_challenges": 4776,
+  "total_overturned": 2630,
   "overturn_pct": 55,
-  "total_games": 1390,
+  "total_games": 1391,
   "challenges": [
     {
       "game_pk": "823649",
@@ -81147,6 +81147,57 @@
       "role": "Catcher",
       "result": "Overturned",
       "desc": "Ernie Clement challenges (ball), call overturned."
+    },
+    {
+      "game_pk": "823440",
+      "game_date": "2026-07-16",
+      "home": "PHI",
+      "away": "NYM",
+      "umpire": "Dan Iassogna",
+      "inning": 4,
+      "half": "bottom",
+      "balls": 0,
+      "strikes": 1,
+      "batter": "Bryce Harper",
+      "pitcher": "Christian Scott",
+      "challenger": "Francisco Alvarez",
+      "role": "Batter",
+      "result": "Overturned",
+      "desc": "Francisco Alvarez challenges (called strike), call overturned."
+    },
+    {
+      "game_pk": "823440",
+      "game_date": "2026-07-16",
+      "home": "PHI",
+      "away": "NYM",
+      "umpire": "Dan Iassogna",
+      "inning": 5,
+      "half": "top",
+      "balls": 2,
+      "strikes": 2,
+      "batter": "Jared Young",
+      "pitcher": "Aaron Nola",
+      "challenger": "Jared Young",
+      "role": "Batter",
+      "result": "Confirmed",
+      "desc": "Jared Young challenges (called strike), call confirmed."
+    },
+    {
+      "game_pk": "823440",
+      "game_date": "2026-07-16",
+      "home": "PHI",
+      "away": "NYM",
+      "umpire": "Dan Iassogna",
+      "inning": 5,
+      "half": "bottom",
+      "balls": 3,
+      "strikes": 2,
+      "batter": "Gabriel Rincones Jr.",
+      "pitcher": "Christian Scott",
+      "challenger": "Francisco Alvarez",
+      "role": "Catcher",
+      "result": "Confirmed",
+      "desc": "Francisco Alvarez challenges (ball), call confirmed."
     }
   ]
 }
