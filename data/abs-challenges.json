@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-25T13:49:47.056569Z",
+  "generated_at": "2026-07-25T15:59:16.323332Z",
   "season": 2026,
   "source": "MLB Stats API (hasReview + description scan)",
   "total_challenges": 5193,
@@ -78103,7 +78103,7 @@
       "challenger": "Ian Happ",
       "role": "Catcher",
       "result": "Confirmed",
-      "desc": "Cubs challenged (touching a base), call on the field was upheld: Nico Hoerner caught stealing 2nd base, catcher Samuel Basallo to shortstop Gunnar Henderson."
+      "desc": "Umpire reviewed (tag play), call on the field was upheld: Nico Hoerner caught stealing 2nd base, catcher Samuel Basallo to shortstop Gunnar Henderson."
     },
     {
       "game_pk": "824816",
