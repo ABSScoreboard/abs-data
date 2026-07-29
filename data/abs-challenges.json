@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-29T14:22:04.834046Z",
+  "generated_at": "2026-07-29T16:22:02.829777Z",
   "season": 2026,
   "source": "MLB Stats API (hasReview + description scan)",
   "total_challenges": 5393,
@@ -40546,7 +40546,7 @@
       "balls": 2,
       "strikes": 0,
       "batter": "Nasim Nuñez",
-      "pitcher": "Zach Thornton",
+      "pitcher": "Zac Thornton",
       "challenger": "Nasim Nuñez",
       "role": "Catcher",
       "result": "Overturned",
