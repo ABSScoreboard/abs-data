@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-08-07T04:23:38.837998Z",
+  "generated_at": "2026-08-07T13:15:38.920608Z",
   "season": 2026,
   "source": "MLB Stats API (hasReview + description scan)",
-  "total_challenges": 5799,
-  "total_overturned": 3221,
+  "total_challenges": 5802,
+  "total_overturned": 3223,
   "overturn_pct": 56,
-  "total_games": 1667,
+  "total_games": 1668,
   "challenges": [
     {
       "game_pk": "823649",
@@ -98589,6 +98589,57 @@
       "role": "Batter",
       "result": "Overturned",
       "desc": "Ryan Jeffers challenges (called strike), call overturned."
+    },
+    {
+      "game_pk": "825053",
+      "game_date": "2026-08-06",
+      "home": "ARI",
+      "away": "SD",
+      "umpire": "Quinn Wolcott",
+      "inning": 1,
+      "half": "top",
+      "balls": 0,
+      "strikes": 1,
+      "batter": "Manny Machado",
+      "pitcher": "Kohl Drake",
+      "challenger": "Gabriel Moreno",
+      "role": "Batter",
+      "result": "Overturned",
+      "desc": "Gabriel Moreno challenges (called strike), call overturned."
+    },
+    {
+      "game_pk": "825053",
+      "game_date": "2026-08-06",
+      "home": "ARI",
+      "away": "SD",
+      "umpire": "Quinn Wolcott",
+      "inning": 4,
+      "half": "top",
+      "balls": 2,
+      "strikes": 2,
+      "batter": "Freddy Fermin",
+      "pitcher": "Kohl Drake",
+      "challenger": "Gabriel Moreno",
+      "role": "Catcher",
+      "result": "Confirmed",
+      "desc": "Gabriel Moreno challenges (ball), call confirmed."
+    },
+    {
+      "game_pk": "825053",
+      "game_date": "2026-08-06",
+      "home": "ARI",
+      "away": "SD",
+      "umpire": "Quinn Wolcott",
+      "inning": 9,
+      "half": "bottom",
+      "balls": 1,
+      "strikes": 0,
+      "batter": "Max Kepler",
+      "pitcher": "Mason Miller",
+      "challenger": "Max Kepler",
+      "role": "Catcher",
+      "result": "Overturned",
+      "desc": "Max Kepler challenges (ball), call overturned."
     }
   ]
 }
