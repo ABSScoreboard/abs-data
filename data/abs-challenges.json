@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-08-21T02:58:56.469268Z",
+  "generated_at": "2026-08-21T13:04:10.060179Z",
   "season": 2026,
   "source": "MLB Stats API (hasReview + description scan)",
-  "total_challenges": 6478,
-  "total_overturned": 3594,
+  "total_challenges": 6481,
+  "total_overturned": 3595,
   "overturn_pct": 55,
-  "total_games": 1849,
+  "total_games": 1850,
   "challenges": [
     {
       "game_pk": "823649",
@@ -110132,6 +110132,57 @@
       "role": "Catcher",
       "result": "Confirmed",
       "desc": "Keibert Ruiz challenges (ball), call confirmed."
+    },
+    {
+      "game_pk": "824153",
+      "game_date": "2026-08-20",
+      "home": "HOU",
+      "away": "LAA",
+      "umpire": "Lance Barrett",
+      "inning": 4,
+      "half": "bottom",
+      "balls": 1,
+      "strikes": 1,
+      "batter": "Taylor Trammell",
+      "pitcher": "Grayson Rodriguez",
+      "challenger": "Taylor Trammell",
+      "role": "Batter",
+      "result": "Confirmed",
+      "desc": "Taylor Trammell challenges (called strike), call confirmed."
+    },
+    {
+      "game_pk": "824153",
+      "game_date": "2026-08-20",
+      "home": "HOU",
+      "away": "LAA",
+      "umpire": "Lance Barrett",
+      "inning": 5,
+      "half": "top",
+      "balls": 0,
+      "strikes": 1,
+      "batter": "Moisés Ballesteros",
+      "pitcher": "Bryan King",
+      "challenger": "Christian Vázquez",
+      "role": "Batter",
+      "result": "Overturned",
+      "desc": "Christian Vázquez challenges (called strike), call overturned."
+    },
+    {
+      "game_pk": "824153",
+      "game_date": "2026-08-20",
+      "home": "HOU",
+      "away": "LAA",
+      "umpire": "Lance Barrett",
+      "inning": 9,
+      "half": "bottom",
+      "balls": 2,
+      "strikes": 0,
+      "batter": "Taylor Trammell",
+      "pitcher": "Blake Weiman",
+      "challenger": "Tyler Heineman",
+      "role": "Catcher",
+      "result": "Confirmed",
+      "desc": "Tyler Heineman challenges (ball), call confirmed."
     }
   ]
 }
