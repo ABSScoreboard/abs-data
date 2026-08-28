@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-28T13:39:54.672184Z",
+  "generated_at": "2026-08-28T22:05:35.116380Z",
   "season": 2026,
   "source": "MLB Stats API (hasReview + description scan)",
   "total_challenges": 6819,
@@ -114803,10 +114803,10 @@
       "strikes": 1,
       "batter": "Kevin McGonigle",
       "pitcher": "Tyler Wells",
-      "challenger": "Nick Fortes",
+      "challenger": "Kenny Piper",
       "role": "Catcher",
       "result": "Confirmed",
-      "desc": "Nick Fortes challenges (ball), call confirmed."
+      "desc": "Kenny Piper challenges (ball), call confirmed."
     },
     {
       "game_pk": "825039",
