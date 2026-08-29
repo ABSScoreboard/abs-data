@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-08-29T16:33:18.395401Z",
+  "generated_at": "2026-08-29T18:03:25.881081Z",
   "season": 2026,
   "source": "MLB Stats API (hasReview + description scan)",
   "total_challenges": 6883,
-  "total_overturned": 3811,
+  "total_overturned": 3810,
   "overturn_pct": 55,
   "total_games": 1955,
   "challenges": [
@@ -116675,7 +116675,7 @@
       "pitcher": "Yohan Ramírez",
       "challenger": "José Fermín",
       "role": "Catcher",
-      "result": "Overturned",
+      "result": "Confirmed",
       "desc": "Foul Bunt"
     },
     {
