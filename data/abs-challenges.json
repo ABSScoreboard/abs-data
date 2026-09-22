@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-09-22T16:49:45.367122Z",
+  "generated_at": "2026-09-22T18:29:38.604327Z",
   "season": 2026,
   "source": "MLB Stats API (hasReview + description scan)",
-  "total_challenges": 8048,
+  "total_challenges": 8050,
   "total_overturned": 4475,
   "overturn_pct": 56,
-  "total_games": 2268,
+  "total_games": 2269,
   "challenges": [
     {
       "game_pk": "823649",
@@ -42846,6 +42846,40 @@
       "role": "Catcher",
       "result": "Confirmed",
       "desc": "Gabriel Moreno challenges (ball), call confirmed."
+    },
+    {
+      "game_pk": "823543",
+      "game_date": "2026-05-23",
+      "home": "NYY",
+      "away": "TB",
+      "umpire": "Sean Barber",
+      "inning": 1,
+      "half": "top",
+      "balls": 3,
+      "strikes": 2,
+      "batter": "Junior Caminero",
+      "pitcher": "Carlos Rodón",
+      "challenger": "Ali Sánchez",
+      "role": "Catcher",
+      "result": "Confirmed",
+      "desc": "Ali Sánchez challenges (ball), call confirmed."
+    },
+    {
+      "game_pk": "823543",
+      "game_date": "2026-05-23",
+      "home": "NYY",
+      "away": "TB",
+      "umpire": "Sean Barber",
+      "inning": 1,
+      "half": "bottom",
+      "balls": 2,
+      "strikes": 2,
+      "batter": "Heliot Ramos",
+      "pitcher": "Nick Martinez",
+      "challenger": "Heliot Ramos",
+      "role": "Batter",
+      "result": "Confirmed",
+      "desc": "Heliot Ramos challenges (called strike), call confirmed."
     },
     {
       "game_pk": "824840",
